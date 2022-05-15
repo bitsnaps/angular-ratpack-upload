@@ -1,7 +1,12 @@
 import org.swalsh.image.ImageService
 import ratpack.form.Form
-import ratpack.jackson.JacksonModule
+import ratpack.form.UploadedFile
+import ratpack.server.BaseDir
+import ratpack.service.Service
+import ratpack.service.StartEvent
 
+import static ratpack.groovy.Groovy.byMethod
+import static ratpack.groovy.Groovy.groovyTemplate
 import static ratpack.groovy.Groovy.ratpack
 import static ratpack.jackson.Jackson.json
 
@@ -12,55 +17,61 @@ def thumbPath = "$imagePath/thumb"
 
 ratpack {
 
-	bindings {
+     serverConfig {
+         port(8080)
+         maxContentLength(5000000)
+        // baseDir BaseDir.find('ratpack')
+     }
 
-		add new JacksonModule()
+    bindings {
+        bind(ImageService)
 
-		init {
-			launchConfig.baseDir.file( thumbPath ).toFile().mkdirs()
-		}
+        add Service.startup('startup'){ StartEvent event ->
+            // Create thumbnails directory if not exists
+            if (!BaseDir.find("${thumbPath}").toFile().exists()){
+                try {
+                    BaseDir.find("${thumbPath}" ).toFile().mkdirs()
+                } catch (Exception e) { println("Error: ${e.message}")}
+            }
+        }
 
-	}
+    }
 
-	handlers {
+    handlers {
 
-		assets assetsPath, "index.html"
+        files {
+            dir( assetsPath )
+            indexFiles('index.html')
+        }
 
-		prefix("image") { ImageService imageService ->
+        path('image'){ ImageService imageService ->
+            def baseDir = BaseDir.find("${assetsPath}")
+            def imageDir = baseDir.resolve( imagePath ).toFile()
+            def thumbDir = baseDir.resolve( thumbPath ).toFile()
 
-			def baseDir = launchConfig.baseDir
-			def imageDir = baseDir.file( imagePath ).toFile()
-			def thumbDir = baseDir.file( thumbPath ).toFile()
+            byMethod {
 
-			get {
+                get { def ctx ->
+                    imageService.getUploadedImages( imageDir ).then {
+                        render json(imagePath: imageDirName, images: it)
+                    }
+                }
+                post /*('upload')*/ {
+                    parse(Form).then { def form ->
+                        form.files("fileUpload").each { def uploaded ->
+                            if (imageService.isImageFile(uploaded)) {
+                                imageService.process(uploaded, imageDir, thumbDir).then { File f ->
+                                    render json(fileName: f.name)
+                                }
+                            } else {
+                                response.status(400).send "Invalid file type. Images only!"
+                            }
+                        }
+                    }
+                }
+            }
+        } //path
 
-				imageService.getUploadedImages( imageDir ).then {
-					render json( imagePath: imageDirName, images: it )
-				}
 
-			}
-
-			post("upload") {
-
-				def form = parse Form
-				def uploaded = form.file( "fileUpload" )
-
-				if( imageService.isImageFile( uploaded ) ) {
-
-					imageService.process( uploaded, imageDir, thumbDir ).then {
-						render json( fileName: it.name )
-					}
-
-				} else {
-
-					response.status(400).send "Invalid file type. Images only!"
-
-				}
-
-			}
-
-		}
-
-	}
-
+    }
 }

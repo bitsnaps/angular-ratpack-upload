@@ -15,7 +15,7 @@ angular.module( "uploader.services" )
 
 			formData.append( "fileUpload", image );
 
-			return $http.post( "image/upload", formData, {
+			return $http.post( "image", formData, {
 				transformRequest: angular.identity,
 				headers: { "Content-Type": undefined }
 			});

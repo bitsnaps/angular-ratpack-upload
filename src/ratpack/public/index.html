@@ -1,34 +1,34 @@
 <!DOCTYPE html>
 <html lang="en" ng-app="uploader">
 <head>
-	<meta charset="UTF-8">
-	<title>AngularJS File Upload with Ratpack</title>
-	<link rel="stylesheet" href="css/style.css">
+    <meta charset="UTF-8">
+    <title>AngularJS File Upload with Ratpack</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body ng-controller="UploadCtrl">
-	
-	<h1>File Uploader</h1>
 
-	<div ng-show="error.length">
-		<p>{{ error }}</p>
-	</div>
+<h1>File Uploader</h1>
 
-	<form>
-		<input type="file" file-model="fileToUpload" ng-disabled="uploading">
-		<button type="button" ng-click="uploadFile()" ng-disabled="uploading">
-			<span ng-show="!uploading">Upload!</span>
-			<span ng-show="uploading">Uploading..</span>
-		</button>
-		<span ng-show="flash.length">{{ flash }}</span>
-	</form>
+<div ng-show="error.length">
+    <p>{{ error }}</p>
+</div>
 
-	<h1>{{ images.length }} Uploaded Images</h1>
+<form>
+    <input type="file" file-model="fileToUpload" ng-disabled="uploading">
+    <button type="button" ng-click="uploadFile()" ng-disabled="uploading">
+        <span ng-show="!uploading">Upload!</span>
+        <span ng-show="uploading">Uploading..</span>
+    </button>
+    <span ng-show="flash.length">{{ flash }}</span>
+</form>
 
-	<div class="images">
-		<a ng-repeat="image in images" href="{{ imagePath }}/{{ image }}" target="_blank"><img ng-src="{{ imagePath }}/thumb/{{ image }}"></a>
-	</div>
+<h1>{{ images.length }} Uploaded Images</h1>
 
-<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.23/angular.min.js"></script>
+<div class="images">
+    <a ng-repeat="image in images" href="{{ imagePath }}/{{ image }}" target="_blank"><img ng-src="{{ imagePath }}/thumb/{{ image }}"></a>
+</div>
+
+<script src="js/angular.min.js"></script>
 <script src="js/app.js"></script>
 <script src="js/controllers/upload.js"></script>
 <script src="js/services/imageService.js"></script>

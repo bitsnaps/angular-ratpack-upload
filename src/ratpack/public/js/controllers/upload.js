@@ -15,7 +15,7 @@ angular.module( "uploader.controllers" )
 		// then default it to a blank string.
 		$scope.error = error.data || error || "";
 		$scope.uploading = false;
-		
+
 	};
 
 	var clearError = function() {
