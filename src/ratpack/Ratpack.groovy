@@ -1,14 +1,13 @@
+import org.slf4j.LoggerFactory
 import org.swalsh.image.ImageService
 import ratpack.form.Form
-import ratpack.form.UploadedFile
 import ratpack.server.BaseDir
 import ratpack.service.Service
 import ratpack.service.StartEvent
-
-import static ratpack.groovy.Groovy.byMethod
-import static ratpack.groovy.Groovy.groovyTemplate
 import static ratpack.groovy.Groovy.ratpack
 import static ratpack.jackson.Jackson.json
+
+def log = LoggerFactory.getLogger("Ratpack")
 
 def assetsPath = "public"
 def imageDirName = "uploaded-files"
@@ -20,17 +19,19 @@ ratpack {
      serverConfig {
          port(8080)
          maxContentLength(5000000)
-        // baseDir BaseDir.find('ratpack')
+         baseDir BaseDir.find('ratpack')
      }
 
     bindings {
         bind(ImageService)
 
         add Service.startup('startup'){ StartEvent event ->
-            // Create thumbnails directory if not exists
-            if (!BaseDir.find("${thumbPath}").toFile().exists()){
+            // Create thumbnails directory if it doesn't exist
+            def thumbDir = new File("${thumbPath}")
+            if (!thumbDir.exists()){
+                log.info("thumbDir not found: ${thumbDir}, creating a new one...")
                 try {
-                    BaseDir.find("${thumbPath}" ).toFile().mkdirs()
+                    thumbDir.mkdirs()
                 } catch (Exception e) { println("Error: ${e.message}")}
             }
         }
@@ -45,15 +46,15 @@ ratpack {
         }
 
         path('image'){ ImageService imageService ->
-            def baseDir = BaseDir.find("${assetsPath}")
-            def imageDir = baseDir.resolve( imagePath ).toFile()
-            def thumbDir = baseDir.resolve( thumbPath ).toFile()
+
+            def imageDir = new File( imagePath )
+            def thumbDir = new File( thumbPath )
 
             byMethod {
 
                 get { def ctx ->
-                    imageService.getUploadedImages( imageDir ).then {
-                        render json(imagePath: imageDirName, images: it)
+                    imageService.getUploadedImages( imageDir ).then { List imageList ->
+                        render json(imagePath: imageDirName, images: imageList)
                     }
                 }
                 post /*('upload')*/ {
@@ -69,9 +70,16 @@ ratpack {
                         }
                     }
                 }
+
             }
         } //path
 
+        get("${imageDirName}/thumb/:imageName") {
+            response.sendFile( new File("${thumbPath}", pathTokens['imageName']).toPath())
+        }
+        get("${imageDirName}/:imageName") {
+            response.sendFile( new File("${imagePath}", pathTokens['imageName']).toPath())
+        }
 
     }
 }

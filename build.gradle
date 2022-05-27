@@ -25,4 +25,5 @@ dependencies {
 
 }
 
-ratpack.baseDir = file('src/ratpack')
+// not needed
+//ratpack.baseDir = file('src/ratpack')

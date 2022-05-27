@@ -4,6 +4,7 @@
 !src/**/build/
 gradle/
 gradlew*
+bin
 
 # Ignore Gradle GUI config
 gradle-app.setting
